@@ -1,17 +1,14 @@
-import fiona
-import rasterio
-from rasterio.plot import show
-import rasterio.mask
+import georasters as gr
 import pandas as pd
+import rasterio
+import rasterio.mask
+import os
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.metrics import mean_squared_error, r2_score
-from sklearn.svm import SVR
-from sklearn.tree import DecisionTreeRegressor
-import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
-
-def cv_downscaling(model, param_grid=None):
+def cv_downscaling(model, X_train, y_train , X_test, y_test, param_grid=None):
   if param_grid != None:
     grid = GridSearchCV(model, param_grid, cv=10)
     grid.fit(X_train, y_train)
@@ -23,8 +20,35 @@ def cv_downscaling(model, param_grid=None):
 
   print("MSE:\t", mean_squared_error(y_test, y_pred))
   print("R^2:\t", r2_score(y_test, y_pred))
+  return model, y_pred
+def prepare_df(data1, colnames1,
+               data2, colnames2,
+               data3, colnames3,
+               ):
+  d = {colnames1: data1.flatten(),
+       colnames2: data2.flatten(),
+       colnames3: data3.flatten(),
+
+       }
+  df = pd.DataFrame(data = d)
 
 
+  return df
+def prepare_data(X, y):
+    # Prepare the X and y
+
+
+    # Standardize the data
+    scaler = StandardScaler()
+    X_scaled_original = scaler.fit_transform(X)
+
+    # Split the data
+    X_train, X_test, y_train, y_test = train_test_split(X_scaled_original, y, test_size=0.1, random_state=42)
+
+    y_train = y_train.reshape(-1)
+    y_test = y_test.reshape(-1)
+
+    return X_train, X_test, y_train,y_test , X_scaled_original
 def bbox(coord_list):
      box = []
      for i in (0,1):
@@ -32,62 +56,24 @@ def bbox(coord_list):
          box.append((res[0][i],res[-1][i]))
      ret = f"({box[0][0]} {box[1][0]}, {box[0][1]} {box[1][1]})"
      return ret
-# Add EE drawing method to folium.
-def add_ee_layer(self, ee_object, vis_params, name):
+def flatten_df(data, colname):
+    df = pd.DataFrame(data[0,:,:])
+    df = df.stack().reset_index()
+    df.columns = ['row','col', colname]
+    return df
+def get_data_for_prediction(ndvi_1km, dem_1km):
 
-    try:
-        # display ee.Image()
-        if isinstance(ee_object, ee.image.Image):
-            map_id_dict = ee.Image(ee_object).getMapId(vis_params)
-            folium.raster_layers.TileLayer(
-            tiles = map_id_dict['tile_fetcher'].url_format,
-            attr = 'Google Earth Engine',
-            name = name,
-            overlay = True,
-            control = True
-            ).add_to(self)
+    df_ndvi_1km = flatten_df(ndvi_1km, 'ndvi')
+    df_dem_1km  = flatten_df(dem_1km, 'dem')
+    df_dem_1km  = df_dem_1km.drop(['row', 'col'], axis = 1)
 
-        # display ee.ImageCollection()
-        elif isinstance(ee_object, ee.imagecollection.ImageCollection):
-            ee_object_new = ee_object.mosaic()
-            map_id_dict = ee.Image(ee_object_new).getMapId(vis_params)
-            folium.raster_layers.TileLayer(
-            tiles = map_id_dict['tile_fetcher'].url_format,
-            attr = 'Google Earth Engine',
-            name = name,
-            overlay = True,
-            control = True
-            ).add_to(self)
-
-        # display ee.Geometry()
-        elif isinstance(ee_object, ee.geometry.Geometry):
-            folium.GeoJson(
-            data = ee_object.getInfo(),
-            name = name,
-            overlay = True,
-            control = True
-        ).add_to(self)
-
-        # display ee.FeatureCollection()
-        elif isinstance(ee_object, ee.featurecollection.FeatureCollection):
-            ee_object_new = ee.Image().paint(ee_object, 0, 2)
-            map_id_dict = ee.Image(ee_object_new).getMapId(vis_params)
-            folium.raster_layers.TileLayer(
-            tiles = map_id_dict['tile_fetcher'].url_format,
-            attr = 'Google Earth Engine',
-            name = name,
-            overlay = True,
-            control = True
-        ).add_to(self)
-
-    except:
-        print("Could not display {}".format(name))
-
-def clip_raster(path, out_name):
+    data_for_prediction = pd.concat([df_ndvi_1km, df_dem_1km ], axis=1)
+    return data_for_prediction
+def clip_raster(path,shapes, out_name):
      with rasterio.open(path) as src:
          out_image, out_transform = rasterio.mask.mask(src, shapes, crop=True)
          out_meta = src.meta
-         print(out_meta)
+
      out_meta.update({"driver": "GTiff",
                       "height": out_image.shape[1],
                       "width": out_image.shape[2],
@@ -105,24 +91,3 @@ def make_new_geotif(origional_path, clipped_array, new_name):
                                   ndv=n, xsize = xs, ysize = ys, geot =gt,
                                   projection = proj, datatype = dtype, band = 1)
     return gtif
-
-def prepare_df(data1, colnames1,
-               data2, colnames2,
-               data3, colnames3,
-               data4, colnames4,
-               data5, colnames5,
-               data6, colnames6):
-  d = {colnames1: data1.flatten(),
-       colnames2: data2.flatten(),
-       colnames3: data3.flatten(),
-       colnames4: data4.flatten(),
-       colnames5: data5.flatten(),
-       colnames6: data6.flatten(),
-       }
-  df = pd.DataFrame(data = d)
-  # df = df.drop(['x', 'y'], axis=1)
-  #df.columns = ['row', 'col', colnames, 'x', 'y']
-  #df['coordinates'] = df['row'].astype('str') + df['col'].astype('str')
-  # df = df.drop(['row', 'col'], axis=1)
-  print(df)
-  return df
