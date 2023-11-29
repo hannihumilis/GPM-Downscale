@@ -1,14 +1,8 @@
 import xarray as xr
-import fiona
 import functions
-import plot_maps as pm
-import pandas as pd
 import numpy as np
 from tqdm import tqdm
-
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-from RandomForest import RandomForestModel
 
 
 class Downscale:

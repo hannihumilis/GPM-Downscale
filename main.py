@@ -7,6 +7,7 @@ import DownscaleModel as DM
 path_to_tif       = 'PATH/GPM-Downscale/Tif/'
 path_to_shapefile = 'PATH/GPM-Downscale/iberia/iberia_merged.shp'
 path_to_save_data = 'PATH/GPM-Downscale/downscaled_files/'
+
 with fiona.open(path_to_shapefile, "r") as shapefile:
     shapes = [feature["geometry"] for feature in shapefile]
 

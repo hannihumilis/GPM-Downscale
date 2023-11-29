@@ -1,4 +1,3 @@
-import matplotlib
 import rasterio
 import matplotlib.pyplot as plt
 import numpy as np

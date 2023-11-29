@@ -2,7 +2,6 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.ensemble import RandomForestRegressor
 import functions
 import numpy as np
-import pandas as pd
 from sklearn.metrics import mean_squared_error, r2_score
 class RandomForestModel:
     def __init__(self, X, y):
