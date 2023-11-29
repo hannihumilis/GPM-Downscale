@@ -4,9 +4,9 @@ import plot_maps as pm
 from RandomForest import RandomForestModel
 import DownscaleModel as DM
 
-path_to_tif       = '/Users/hanni/GPM/GPM-Downscale/Tif/'
-path_to_shapefile = '/Users/hanni/GPM/GPM-Downscale/iberia/iberia_merged.shp'
-path_to_save_data = '/Users/hanni/GPM/GPM-Downscale/downscaled_files/'
+path_to_tif       = 'PATH/GPM-Downscale/Tif/'
+path_to_shapefile = 'PATH/GPM-Downscale/iberia/iberia_merged.shp'
+path_to_save_data = 'PATH/GPM-Downscale/downscaled_files/'
 with fiona.open(path_to_shapefile, "r") as shapefile:
     shapes = [feature["geometry"] for feature in shapefile]
 
@@ -31,4 +31,4 @@ downscale_array = DM.Downscale(ndvi_low  ,dem_low   ,gpm_low   ,ndvi_high ,dem_h
                                dataset_path=path_to_save_data ).downscale_array
 
 fig, ax = pm.plot_downscaled_array(downscale_array)
-fig.savefig('/Users/hanni/GPM/GPM-Downscale/figures/1km_2020_annual_precipitation.png', dpi=300, bbox_inches='tight')
+fig.savefig('PATH/GPM-Downscale/figures/1km_2020_annual_precipitation.png', dpi=300, bbox_inches='tight')
