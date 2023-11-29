@@ -1,9 +1,5 @@
 # GPM-Downscale
 
-[![Release][release-shield]][release-url]
-[![DOI][zenodo-shield]][zenodo-url]
-[![MIT License][license-shield]][license-url]
-
 Precipitation over the Iberian peninsula is downscaled using the Monthly Global Precipitaiton 
 Measurement (GPM) product (version 6) from the origional resolution of 11.132km to 1km using 
 Normalized Difference Vegetation Index (NDVI) and elevation data. This is a students project 
